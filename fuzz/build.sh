@@ -24,6 +24,37 @@ XMLRPC="$SRC/src/libXmlRpc/src"
 XMLPARSER="$SRC/src/libxmlparser"
 mkdir -p "$OUT"
 
+# Since OpenCCU-Base #294 a component's version.cpp (libelvutils' among them) includes generated-<name>-version.h,
+# which CMake writes into the build tree: `sh version.sh`, stripped, as `#define <MACRO> "<version>"`
+# (openccu_version_header() in CMakeLists.txt with cmake/WriteVersionHeader.cmake; rfd, hs485d and multimacd spell
+# the same two commands out in their own CMakeLists.txt). Do the same for every component that declares one, reading
+# name and macro from its CMakeLists.txt, so the headers carry the real versions. A ref from before #294 declares
+# none and gets none.
+GEN=$(mktemp -d)
+trap 'rm -rf "$GEN"' EXIT
+for cml in "$SRC"/src/*/CMakeLists.txt; do
+  dir=$(dirname "$cml")
+  # openccu_version_header(<target> <name> <MACRO>), or the spelled-out form's output file and -DMACRO_NAME=
+  decl=$(sed -n 's/^[[:space:]]*openccu_version_header([[:space:]]*[^[:space:]]*[[:space:]]\{1,\}\([^[:space:]]*\)[[:space:]]\{1,\}\([A-Za-z0-9_]*\)[[:space:]]*).*/\1 \2/p' "$cml")
+  if [ -z "$decl" ] && grep -q 'WriteVersionHeader\.cmake' "$cml"; then
+    name=$(sed -n 's/.*generated-\([^"/]*\)-version\.h.*/\1/p' "$cml" | sort -u)
+    macro=$(sed -n 's/.*-DMACRO_NAME=\([A-Za-z0-9_]*\).*/\1/p' "$cml" | sort -u)
+    decl="$name $macro"
+  fi
+  [ -n "$decl" ] || continue
+  read -r name macro rest <<<"$decl"
+  if [ -z "$name" ] || [ -z "$macro" ] || [ -n "$rest" ] || [ ! -f "$dir/version.sh" ]; then
+    echo "cannot read the version header declaration of $cml: '$decl'" >&2
+    exit 1
+  fi
+  version=$(sh "$dir/version.sh")
+  # CMake's string(STRIP): leading and trailing whitespace
+  version=$(printf '%s' "$version" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  printf '#define %s "%s"\n' "$macro" "$version" >"$GEN/generated-$name-version.h"
+  echo "generated-$name-version.h: $macro \"$version\""
+done
+FLAGS+=(-I"$GEN")
+
 echo "building fuzz_xmlrpc_value"
 "$CXX" "${FLAGS[@]}" -I"$XMLRPC" "$HERE/fuzz_xmlrpc_value.cpp" "$XMLRPC"/*.cpp -o "$OUT/fuzz_xmlrpc_value"
 echo "building fuzz_xmlrpc_request"

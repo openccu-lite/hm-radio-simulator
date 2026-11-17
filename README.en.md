@@ -450,6 +450,7 @@ coprocessor-state mutex that `improvedInit()` holds while it waits, so rfd gives
 | -     | the fix table for OpenCCU-Base #260, #263, #266, #268: four findings these fixes resolve count as fixed from upstream `main` and the fork's tag `v1.1.0-dev.6`, not as known broken                                                                                                                                            | done          |
 | -     | bug: `run-tests.sh` tests a stale tree for a branch: docker reuses the cached clone as long as `BASE_REF` (e.g. `main`) does not change; resolve the branch to its commit before the build                                                                                                                                     | ready         |
 | -     | review the upstream merges in OpenCCU and OpenCCU-Base and adapt the simulator or the tests where needed                                                                                                                                                                                                                       | done          |
+| -     | bug: the fuzz build fails since OpenCCU-Base #294: CMake writes the new `generated-*-version.h`; `fuzz/build.sh` now generates them the same way from the components' `version.sh`                                                                                                                                             | testing       |
 
 ## Credits and licences
 
