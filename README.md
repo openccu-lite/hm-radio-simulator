@@ -547,7 +547,7 @@ dem zuletzt veröffentlichten Verlauf aufsetzt und keiner den Eintrag des andere
 - ✅ **Feldrelevanz im Bericht:** jeder Fund bekommt eine Einordnung aus der Recherche (trifft Nutzer / selten / seltener Grenzfall), als Markierung an seinen Tests, mit Filter
 - ✅ **Die Stände neu geordnet:** je das neueste Tag und der aktuelle Stand von OpenCCU-Base (`main`) und vom Fork [openccu-lite/OpenCCU-Base](https://github.com/openccu-lite/OpenCCU-Base) (das neueste openccu-lite-Tag `v*` und der Zweig `lite`, bisher `lite-3.89.11`); die Überwachung beobachtet beide Repositories und lässt bei jeder Bewegung die Suite laufen
 - ✅ **Fehler: überlappende CI-Läufe:** der zuletzt veröffentlichte Bericht verliert den Verlaufseintrag des anderen Laufs; Bericht und Veröffentlichung nacheinander statt parallel
-- 🤷 **Aufteilen in drei Repositories:** der Simulator als eigene Bibliothek, die Testsuite für OpenCCU-Base mit drei Spalten (die zwei neuesten Tags und `main`) und die Variante von openccu-lite mit den vier Spalten wie bisher; erst der Plan
+- 🤷 **Die Testsuiten ziehen aus:** der Simulator bleibt hier als Bibliothek; die Suite zieht nach `openccu-lite/openccu-base-test` (openccu-lites Variante mit den vier Spalten wie bisher), dazu `OpenCCU/OpenCCU-Base-Test` mit drei Spalten (die zwei neuesten Tags und `main`), falls OpenCCU es aufnimmt; erst der Plan
 - ✅ **Ein Wakeup-/Burst-Gerät:** WOKEN_UP, die Wakeup-Warteschlange, Burst, verzögertes Löschen
 - ✅ **Zwei Interfaces:** Roaming, RSSI, `setBidcosInterface`, die Duty-Cycle-Stufen
 - 🤷 **Idee: ein simuliertes HmIP-Funkmodul,** damit hmipserver startet: Version über XML-RPC und ein Starttest mit
