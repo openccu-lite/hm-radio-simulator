@@ -559,7 +559,7 @@ dem zuletzt veröffentlichten Verlauf aufsetzt und keiner den Eintrag des andere
 - ✅ **Fix-Tabelle für OpenCCU-Base #260, #263, #266, #268:** vier Befunde, die diese Fixes beheben, zählen ab upstream `main` und ab dem Fork-Tag `v1.1.0-dev.6` als behoben statt als bekannt kaputt
 - ☑️ **Fehler: `run-tests.sh` testet bei einem Zweig einen veralteten Stand:** Docker nimmt den zwischengespeicherten Klon, solange sich `BASE_REF` (etwa `main`) nicht ändert; der Zweig wird vor dem Bauen zu seinem Commit aufgelöst
 - ✅ **Upstream-Merges prüfen:** was in OpenCCU und OpenCCU-Base neu gemergt wurde und ob der Simulator oder die Tests dafür angepasst werden müssen
-- 🕵️ **Fehler: der Fuzz-Build scheitert seit OpenCCU-Base #294:** die neuen `generated-*-version.h` schreibt sonst CMake; `fuzz/build.sh` erzeugt sie jetzt genauso aus den `version.sh` der Komponenten
+- ✅ **Fehler: der Fuzz-Build scheitert seit OpenCCU-Base #294:** die neuen `generated-*-version.h` schreibt sonst CMake; `fuzz/build.sh` erzeugt sie jetzt genauso aus den `version.sh` der Komponenten
 
 ✅ erledigt · 🕵️ gebaut, in Prüfung · 🏗️ in Arbeit · 📥 eingereiht · ☑️ bereit zur Umsetzung · 🤷 noch zu klären · 💤 später
 
