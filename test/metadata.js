@@ -267,6 +267,15 @@ export const FINDINGS = Object.freeze({
         issue: 'https://github.com/OpenCCU/OpenCCU-Base/issues/375',
         fork: {commit: '8dffdaa39620d5e7d2f2467307d3b8f87e06f055', branch: 'fix/375-rfd-lgw-connect-blocks-rpc'},
     },
+    'lgw-missing-at-start': {
+        title: "rfd: a LAN gateway that is not reachable when rfd starts is given up for good - the init drops the interface when the first connect (or the search for its serial) fails, so it is never reconnected; with the gateway as the only interface rfd exits, and a gateway that drops the SYN keeps rfd's start in a connect() without timeout for about 127 s",
+        relevance: 'field',
+        relevanceNote:
+            "every installation with an HM-LGW after a power cut, when the gateway boots slower than the system: the gateway and its devices stay away until rfd is restarted; behaves the same in eQ-3's closed-source rfd 2.5.1",
+        draft: '029-lgw-missing-at-start.md',
+        issue: 'https://github.com/OpenCCU/OpenCCU-Base/issues/383',
+        fork: {commit: 'e8ea125de81a13f31dd623ef83c56a408024a13f', branch: 'fix/383-rfd-lgw-missing-at-start'},
+    },
     'copro-request-races': {
         title: 'rfd: the coprocessor request slot (CCU2CommController RequestInfo, the command copied into it) is written by the serial receive thread and read by the waiting caller outside the lock, and handleIncomingResponse locks a mutex twice (ThreadSanitizer; the area of the system-command-slot finding, #179)',
         relevance: 'edge',

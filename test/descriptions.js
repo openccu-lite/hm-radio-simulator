@@ -266,8 +266,8 @@ export const DESCRIPTIONS = Object.freeze({
     'test/daemon/rfd-lgw-front.test.js': {
         'AES: rfd connects through the encrypted gateway - V handshake on both ports, keepalives, the init':
             'rfd connects to a simulated LAN gateway (HM-LGW) with a LAN key, agrees on the encryption on both channels and brings the radio module online through it.',
-        'AES: a wrong LAN key - rfd decrypts garbage, sees no switch command, reports WRONG_KEY and gives the interface up':
-            'With the wrong LAN key rfd cannot understand the gateway, reports it and gives up on the interface.',
+        'AES: a wrong LAN key - rfd decrypts garbage, sees no switch command, reports WRONG_KEY and keeps retrying the interface':
+            'With the wrong LAN key rfd cannot understand the gateway and reports it; it keeps the interface and tries again, as after a lost connection (before the fix of the lgw-missing-at-start finding it gave the interface up and, with no other interface, exited).',
         'plaintext through the JavaScript front: no V, the same init as through hmlangw':
             'The same gateway without encryption, as with the hmlangw tool.',
         'AES: port 2000 dropped - rfd reconnects both ports and re-initialises the module (#13)':
@@ -293,6 +293,18 @@ export const DESCRIPTIONS = Object.freeze({
             'While the connection attempt to the silent gateway is still waiting, listBidcosInterfaces and getVersion are answered within seconds instead of after the attempt.',
         "the gateway refuses (RST): many reconnect attempts leave rfd's threads, descriptors and memory flat, RPC calls answered, and it reconnects": `A gateway whose ports are closed: ${rfd} tries again every few seconds for a minute; its threads, open descriptors and memory stay the same, its clients get answers, and it reconnects when the gateway is back.`,
         "the gateway accepts TCP and never says hello: many reconnect attempts leave rfd's threads, descriptors and memory flat, RPC calls answered, and it reconnects": `A hung gateway that accepts the connection but never greets: ${rfd} gives up after its handshake wait and tries again, for a minute, without growing in threads, descriptors or memory, and reconnects when the gateway is back.`,
+    },
+    'test/daemon/rfd-lgw-missing-at-start.test.js': {
+        'the gateway refuses (ports closed) when rfd starts: rfd starts at once, keeps the interface and connects once the gateway is up (#383, the lgw-missing-at-start finding)': `After a power cut the LAN gateway often boots slower than the system. ${rfd} starts while the gateway's ports are still closed: it must start at once, keep the gateway as a not yet connected interface and connect it when the gateway comes up, handing its radio module the BidCoS address.`,
+        'the gateway drops the SYN when rfd starts: rfd starts at once, keeps the interface and connects once the gateway is up (#383, the lgw-missing-at-start finding)': `The gateway does not answer at all when ${rfd} starts (switched off, still booting its network). rfd's start must not wait minutes for it; it keeps the gateway as not connected and connects it when the gateway comes up.`,
+        'rfd answers within 20 s and lists the gateway as not connected':
+            'rfd reports itself started and answers its clients within seconds of its start, and lists the absent gateway as an interface that is not connected, instead of leaving it out.',
+        'the gateway is the only interface and refuses when rfd starts: rfd keeps running and connects once the gateway is up (#383, the lgw-missing-at-start finding)': `A system whose only radio is a LAN gateway that is not up yet when ${rfd} starts: rfd must keep running and connect the gateway when it comes up, instead of exiting for want of an interface.`,
+        'rfd answers and stays up':
+            'rfd keeps running and answers its clients although its only interface is not connected.',
+        'the gateway (configured by serial only) is not found when rfd starts: rfd keeps the interface, searches again and connects once the gateway answers (#383, the lgw-missing-at-start finding)': `A gateway configured by its serial number only, which ${rfd} looks for on the network: it does not answer the search at the start, rfd keeps it, searches again and connects once the gateway answers.`,
+        'rfd lists the gateway as not connected':
+            'The gateway not found at the start is listed as an interface that is not connected.',
     },
     'test/daemon/rfd-lgw-recovery.test.js': {
         'AES: the restore after a reconnect fails twice (SET_CLOCK answered with an error) - rfd drops the connection, retries after 5 s and is back only with a complete restore (#13)':
@@ -357,8 +369,8 @@ export const DESCRIPTIONS = Object.freeze({
             'A gateway serial number written in other letter case is still recognised.',
         'a gateway with the wrong serial is rejected: rfd logs it and does not come up on it':
             'A gateway with the wrong serial number is refused.',
-        'no gateway at start: rfd cannot connect and gives up on the interface':
-            'Without a gateway at start, rfd gives up on that interface.',
+        'no gateway at start: rfd cannot connect; it keeps the interface and retries':
+            'Without a gateway at start, rfd keeps the interface as not connected and keeps trying (before the fix of the lgw-missing-at-start finding it gave the interface up and, with no other interface, exited).',
         'gateway lost and back: CONNECTED false while it is gone, rfd reconnects and re-initialises the module':
             'While the gateway is gone, rfd reports the interface as disconnected; when it returns, rfd reconnects.',
         'reconnect retry: a constant basetimeout (5 s) between attempts when the IP address is configured':

@@ -13,7 +13,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 
 import {startRfd, spawnRfd, withDaemon, skipWithoutDaemons} from '../helpers/daemon.js';
-import {regression} from '../helpers/known.js';
+import {regression, isKnownBroken} from '../helpers/known.js';
 import {startReceiver} from '../helpers/rpc.js';
 import {
     attachSwitch,
@@ -81,16 +81,25 @@ test(
 );
 
 test(
-    'AES: a wrong LAN key - rfd decrypts garbage, sees no switch command, reports WRONG_KEY and gives the interface up',
+    'AES: a wrong LAN key - rfd decrypts garbage, sees no switch command, reports WRONG_KEY and keeps retrying the interface',
     options(),
     async (t) => {
         const rfd = await spawnRfd({lgwFront: {serial: SERIAL, key: KEY, configuredKey: 'AnotherKey'}});
         try {
-            const exit = await Promise.race([rfd.exited, sleep(30000).then(() => null)]);
+            const exit = await Promise.race([rfd.exited, sleep(15000).then(() => null)]);
             t.diagnostic(`rfd with the wrong key: ${exit ? `exited ${JSON.stringify(exit)}` : 'still running'}`);
             assert.ok(rfd.grep(/Didn't receive switch protocol command/).length >= 1, rfd.tail(30));
-            assert.ok(exit, 'rfd gives up the interface and exits (measured on 3.89.11)');
-            assert.equal(exit.code, 0);
+            if (isKnownBroken('lgw-missing-at-start')) {
+                // before the fix of the lgw-missing-at-start finding: the failed first connect drops the interface
+                assert.ok(exit, 'rfd gives up the interface and exits (measured on 3.89.11)');
+                assert.equal(exit.code, 0);
+            } else {
+                // a failed first connect is retried like a lost connection, whatever the reason
+                assert.equal(exit, null, `rfd exited:\n${rfd.tail()}`);
+                const interfaces = await rfd.call('listBidcosInterfaces', [], {timeout: 5000});
+                assert.equal(interfaces[0]?.CONNECTED, false, JSON.stringify(interfaces));
+                assert.ok(rfd.grep(/Didn't receive switch protocol command/).length >= 2, 'the attempt is retried');
+            }
             assert.ok(
                 rfd.lgw.trace.some((e) => e.kind === 'bidcos' && e.line && e.line.startsWith('V')),
                 'the handshake was attempted',

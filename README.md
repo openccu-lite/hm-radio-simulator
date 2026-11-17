@@ -288,7 +288,11 @@ Geräts löst zwei solche Befehle aus). Ein Forumsbericht über ein träges Syst
 die Controller-Sperre über ein `connect()` ohne Timeout, das erst nach etwa 127 s aufgibt, und `listBidcosInterfaces`
 wartet auf dieselbe Sperre - der RPC-Server steht rund 127 von 132 s, solange das Gateway weg ist. Ein Speicherleck ist
 es nicht: Speicher, Threads und Deskriptoren bleiben über viele Versuche gleich (`test/daemon/rfd-lgw-unreachable.test.js`,
-das ausbleibende SYN ohne iptables über einen Listener mit voller Accept-Queue).
+das ausbleibende SYN ohne iptables über einen Listener mit voller Accept-Queue). Dabei fiel `lgw-missing-at-start` auf (OpenCCU-Base #383):
+Ist das Gateway beim Start von rfd nicht erreichbar - nach einem Stromausfall bootet es oft langsamer als das System -,
+gibt rfd die Schnittstelle endgültig auf und verbindet sie nie mehr; ist das Gateway die einzige Schnittstelle, beendet
+sich rfd, und ein Gateway, das das SYN verpuffen lässt, hält rfds Start rund 127 s auf. eQ-3s Closed-Source-rfd 2.5.1
+verhält sich genauso (`test/daemon/rfd-lgw-missing-at-start.test.js`).
 
 ## Wie es funktioniert
 
@@ -444,7 +448,7 @@ man ihn:
   Installation im normalen Betrieb auf ihn trifft. Sie stammt aus einer Recherche vom 2026-10-14 zu jedem Fund: was ihn
   auslöst, wie oft das im Betrieb vorkommt, was dann passiert und ob es Berichte aus dem Feld gibt.
   **hits users** (trifft Nutzer): gewöhnliche Installationen laufen im normalen Betrieb hinein (`ack-rssi-sign`,
-  `wired-maintenance`, `lgw-connect-blocks-rpc`); **rare** (selten): echt, braucht aber einen ungewöhnlichen Aufbau oder ein Zusammentreffen
+  `wired-maintenance`, `lgw-connect-blocks-rpc`, `lgw-missing-at-start`); **rare** (selten): echt, braucht aber einen ungewöhnlichen Aufbau oder ein Zusammentreffen
   (`devices-lock-wait`, `system-command-slot`, `json-substr`, der hs485d-Teil von `lgw-wrapper-races` und sein Use-after-free `lgw-reconnect-uaf`); **rare edge
   case** (seltener Grenzfall): im normalen Betrieb praktisch nie - eine kaputte Eingabe, ein fehlerhafter Client, nur
   unter einem Sanitizer, oder harmlos, wo es passiert (alle übrigen). Der Grund steht im Tooltip und in der

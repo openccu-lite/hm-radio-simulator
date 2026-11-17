@@ -100,7 +100,10 @@ reconnect holds the controller lock across a `connect()` without a timeout that 
 `listBidcosInterfaces` waits for the same lock - the RPC server stands still for about 127 of every 132 s while the
 gateway stays away. It is not a memory leak: memory, threads and descriptors stay flat over many attempts
 (`test/daemon/rfd-lgw-unreachable.test.js`; the unanswered SYN without iptables, through a listener with a full accept
-queue).
+queue). On the way `lgw-missing-at-start` turned up (OpenCCU-Base #383): when the gateway is not reachable as rfd starts - after a power cut
+it often boots slower than the system - rfd gives the interface up for good and never connects it; with the gateway as
+its only interface rfd exits, and a gateway that drops the SYN holds rfd's start for about 127 s. eQ-3's closed-source
+rfd 2.5.1 does the same (`test/daemon/rfd-lgw-missing-at-start.test.js`).
 
 ## Running it
 
@@ -182,7 +185,7 @@ job). A run on `main` also publishes an HTML report on GitHub Pages: **<https://
 - **field relevance** - the tests of a finding carry a label before their name: how likely an ordinary installation
   runs into the finding under normal operation. It comes from a study of each finding on 2026-10-14: what triggers
   it, how often that happens in operation, what it does when it hits, and whether there are reports from the field.
-  **hits users**: ordinary installations run into it under normal operation (`ack-rssi-sign`, `wired-maintenance`, `lgw-connect-blocks-rpc`);
+  **hits users**: ordinary installations run into it under normal operation (`ack-rssi-sign`, `wired-maintenance`, `lgw-connect-blocks-rpc`, `lgw-missing-at-start`);
   **rare**: real, but it takes an uncommon setup or a coincidence (`devices-lock-wait`, `system-command-slot`,
   `json-substr`, the hs485d part of `lgw-wrapper-races` and its use-after-free `lgw-reconnect-uaf`); **rare edge case**: practically never under normal operation
   \- a broken input, a buggy client, only under a sanitizer, or harmless where it happens (all the others). The reason

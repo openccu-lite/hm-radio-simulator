@@ -30,6 +30,7 @@ const RESEARCH = {
     'lgw-reconnect-uaf': 'rare', // #195: the hs485d part's use-after-free, its own finding for the fork fix
     'devices-lock-wait': 'rare', // 027
     'lgw-connect-blocks-rpc': 'field', // 028, #375 (researched with its finding, 2026-11-17)
+    'lgw-missing-at-start': 'field', // 029 (researched with its finding, 2026-11-17)
     'system-command-slot': 'rare', // #179
     'json-substr': 'rare', // #175
     'double-join': 'edge', // #161

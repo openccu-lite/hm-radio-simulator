@@ -18,7 +18,7 @@ import net from 'node:net';
 import {RadioModule} from '../../lib/module.js';
 import {createHmlangwGateway, LGW_BIDCOS_PORT, LGW_KEEPALIVE_PORT} from '../../lib/hmlangw.js';
 import {startRfd, spawnRfd, withDaemon, skipWithoutHmlangw, tmpdir} from '../helpers/daemon.js';
-import {regression} from '../helpers/known.js';
+import {regression, isKnownBroken} from '../helpers/known.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const options = (extra = {}) => ({...skipWithoutHmlangw, timeout: 180000, ...extra});
@@ -113,14 +113,22 @@ test('a gateway with the wrong serial is rejected: rfd logs it and does not come
     }
 });
 
-test('no gateway at start: rfd cannot connect and gives up on the interface', options(), async (t) => {
+test('no gateway at start: rfd cannot connect; it keeps the interface and retries', options(), async (t) => {
     const rfd = await spawnRfd({interfaces: [{type: 'HMLGW2', serial: SERIAL, ip: '127.0.0.1'}]});
     try {
-        const exit = await Promise.race([rfd.exited, sleep(30000).then(() => null)]);
+        const exit = await Promise.race([rfd.exited, sleep(15000).then(() => null)]);
         t.diagnostic(`rfd without a gateway: ${exit ? `exited ${JSON.stringify(exit)}` : 'still running'}`);
         assert.ok(rfd.grep(/Cannot connect to HomeMatic Lan Gateway/).length >= 1, rfd.tail(30));
-        assert.ok(exit, `rfd kept running without its gateway:\n${rfd.tail()}`);
-        assert.equal(exit.code, 0, 'rfd exits with code 0 on an interface error (measured on 3.89.11)');
+        if (isKnownBroken('lgw-missing-at-start')) {
+            // before the fix of the lgw-missing-at-start finding: the interface is dropped, rfd has none left
+            assert.ok(exit, `rfd kept running without its gateway:\n${rfd.tail()}`);
+            assert.equal(exit.code, 0, 'rfd exits with code 0 on an interface error (measured on 3.89.11)');
+            return;
+        }
+        assert.equal(exit, null, `rfd exited without its gateway:\n${rfd.tail()}`);
+        const interfaces = await rfd.call('listBidcosInterfaces', [], {timeout: 5000});
+        assert.equal(interfaces[0]?.CONNECTED, false, JSON.stringify(interfaces));
+        assert.ok(rfd.grep(/LGWPortWrapper::reconnect\(\)/).length >= 1, 'the reconnect retries the gateway');
     } finally {
         await rfd.stop();
     }
