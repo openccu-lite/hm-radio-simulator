@@ -287,6 +287,13 @@ export const DESCRIPTIONS = Object.freeze({
         '#165 AES: the module power-cycled behind the gateway - rfd republishes the paired devices, the keys and the per-channel AES policy (restoreConfigToCoprocessor)':
             'The radio module behind the gateway loses power and comes back: rfd hands it the paired devices, the keys and the per-channel security settings again (OpenCCU-Base #165: before the fix the security settings were missing).',
     },
+    'test/daemon/rfd-lgw-unreachable.test.js': {
+        'the gateway does not answer (SYN dropped): rfd answers RPC calls while a reconnect attempt is under way, and reconnects when the gateway is back (#375, the lgw-connect-blocks-rpc finding)': `A LAN gateway that is switched off answers nothing, and each reconnect attempt of ${rfd} waits about two minutes for the connection. Meanwhile rfd must keep answering its clients, report the gateway as not connected, and connect again once the gateway is back.`,
+        'RPC calls are answered at once during the attempt':
+            'While the connection attempt to the silent gateway is still waiting, listBidcosInterfaces and getVersion are answered within seconds instead of after the attempt.',
+        "the gateway refuses (RST): many reconnect attempts leave rfd's threads, descriptors and memory flat, RPC calls answered, and it reconnects": `A gateway whose ports are closed: ${rfd} tries again every few seconds for a minute; its threads, open descriptors and memory stay the same, its clients get answers, and it reconnects when the gateway is back.`,
+        "the gateway accepts TCP and never says hello: many reconnect attempts leave rfd's threads, descriptors and memory flat, RPC calls answered, and it reconnects": `A hung gateway that accepts the connection but never greets: ${rfd} gives up after its handshake wait and tries again, for a minute, without growing in threads, descriptors or memory, and reconnects when the gateway is back.`,
+    },
     'test/daemon/rfd-lgw-recovery.test.js': {
         'AES: the restore after a reconnect fails twice (SET_CLOCK answered with an error) - rfd drops the connection, retries after 5 s and is back only with a complete restore (#13)':
             'After the gateway connection drops, the radio module rejects the clock setting twice while rfd restores its configuration. rfd must not treat the half-restored module as ready: it disconnects, waits 5 seconds, reconnects and comes back only once the restore has gone through.',
