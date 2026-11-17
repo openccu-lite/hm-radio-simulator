@@ -94,7 +94,13 @@ read outside the lock, the response copied under a race, a double lock in `handl
 #179). Without the `tcflush` (#173) every telegram reaches rfd on a pty, which showed `devices-lock-wait`: rfd holds its
 device lock while a coprocessor command waits for its answer, and the receive thread waits for the same lock for every
 telegram to the central - the answer stays unread and each command runs into its 1 s timeout (a paired device's
-sysinfo causes two such commands).
+sysinfo causes two such commands). A forum report of a sluggish system while its LAN gateway was switched off brought
+`lgw-connect-blocks-rpc` (OpenCCU-Base #375): when the gateway does not answer at all (the SYN goes unanswered), rfd's
+reconnect holds the controller lock across a `connect()` without a timeout that gives up only after about 127 s, and
+`listBidcosInterfaces` waits for the same lock - the RPC server stands still for about 127 of every 132 s while the
+gateway stays away. It is not a memory leak: memory, threads and descriptors stay flat over many attempts
+(`test/daemon/rfd-lgw-unreachable.test.js`; the unanswered SYN without iptables, through a listener with a full accept
+queue).
 
 ## Running it
 
@@ -176,7 +182,7 @@ job). A run on `main` also publishes an HTML report on GitHub Pages: **<https://
 - **field relevance** - the tests of a finding carry a label before their name: how likely an ordinary installation
   runs into the finding under normal operation. It comes from a study of each finding on 2026-10-14: what triggers
   it, how often that happens in operation, what it does when it hits, and whether there are reports from the field.
-  **hits users**: ordinary installations run into it under normal operation (`ack-rssi-sign`, `wired-maintenance`);
+  **hits users**: ordinary installations run into it under normal operation (`ack-rssi-sign`, `wired-maintenance`, `lgw-connect-blocks-rpc`);
   **rare**: real, but it takes an uncommon setup or a coincidence (`devices-lock-wait`, `system-command-slot`,
   `json-substr`, the hs485d part of `lgw-wrapper-races` and its use-after-free `lgw-reconnect-uaf`); **rare edge case**: practically never under normal operation
   \- a broken input, a buggy client, only under a sanitizer, or harmless where it happens (all the others). The reason

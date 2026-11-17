@@ -258,6 +258,15 @@ export const FINDINGS = Object.freeze({
         draft: '027-devices-lock-wait.md',
         issue: null,
     },
+    'lgw-connect-blocks-rpc': {
+        title: "rfd: a LAN gateway that does not answer at all (the SYN dropped) blocks rfd's RPC server for about 127 s of every 132 s - the reconnect holds the controller mutex across a connect() without timeout, and IsConnected() (listBidcosInterfaces) waits for it",
+        relevance: 'field',
+        relevanceNote:
+            'every installation with an HM-LGW whose gateway is switched off or unplugged: the logic layer, the WebUI and the add-ons stall on rfd for as long as the gateway stays away',
+        draft: '028-lgw-connect-blocks-rpc.md',
+        issue: 'https://github.com/OpenCCU/OpenCCU-Base/issues/375',
+        fork: {commit: '8dffdaa39620d5e7d2f2467307d3b8f87e06f055', branch: 'fix/375-rfd-lgw-connect-blocks-rpc'},
+    },
     'copro-request-races': {
         title: 'rfd: the coprocessor request slot (CCU2CommController RequestInfo, the command copied into it) is written by the serial receive thread and read by the waiting caller outside the lock, and handleIncomingResponse locks a mutex twice (ThreadSanitizer; the area of the system-command-slot finding, #179)',
         relevance: 'edge',
